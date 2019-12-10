@@ -7,10 +7,11 @@
 #' @param y vector of size n. If loss = "logit", elements of y must be in {-1,1} 
 #' @param hc output of \code{\link{hclust}} function. If not provided, \code{\link{hclust}} is run with \code{ward.D2} method. User can also provide the desired method: "single", "complete", "average", "mcquitty", "ward.D", "ward.D2", "centroid", "median".
 #' @param lambda lambda values for group lasso. If not provided, the function generates its own values of lambda
-#' @param weightLevel a vector of size p for each level of the hierarchy. A zero indicates that the level will be ignored. If not provided, use 1/(height between 2 successive levels)
-#' @param weightSizeGroup a vector of size 2*p-1 containing the weight for each group. Default is the square root of the size of each group
+#' @param weightLevel a vector of size p for each level of the hierarchy. A zero indicates that the level will be ignored. If not provided, use 1/(height between 2 successive levels). Only if \code{hc} is provided
+#' @param weightSizeGroup a vector of size 2*p-1 containing the weight for each group. Default is the square root of the size of each group. Only if \code{hc} is provided
 #' @param intercept should an intercept be included in the model ?
 #' @param loss a character string specifying the loss function to use, valid options are: "ls" least squares loss (regression) and "logit" logistic loss (classification)
+#' @param sizeMaxGroup maximum size of selected groups. If NULL, no restriction
 #' @param verbose print some information
 #' @param ... Others parameters for \code{\link{gglasso}} function
 #'
@@ -38,26 +39,26 @@
 #' # Simulate gaussian data with block-diagonal variance matrix containing 12 blocks of size 5
 #' X <- simuBlockGaussian(50, 12, 5, 0.7)
 #' # Generate a response variable
-#' y <- drop(X[,c(2,7,12)]%*%c(2,2,-2)+rnorm(50,0,0.5))
+#' y <- X[,c(2, 7, 12)] %*% c(2, 2, -2) + rnorm(50, 0, 0.5)
 #' # Apply MLGL method
-#' res <- MLGL(X,y)
+#' res <- MLGL(X, y)
 #' 
 #' @seealso \link{cv.MLGL}, \link{stability.MLGL}, \link{listToMatrix}, \link{predict.MLGL}, \link{coef.MLGL}, \link{plot.cv.MLGL}
 #' 
 #' @export
-MLGL <- function(X, y, hc = NULL, lambda = NULL, weightLevel = NULL, weightSizeGroup = NULL, intercept = TRUE, loss = c("ls", "logit"), verbose = FALSE, ...)
+MLGL <- function(X, y, hc = NULL, lambda = NULL, weightLevel = NULL, weightSizeGroup = NULL, intercept = TRUE, loss = c("ls", "logit"), sizeMaxGroup = NULL, verbose = FALSE, ...)
 {
   #check parameters 
   loss <- match.arg(loss)
-  .checkParameters(X, y, hc, lambda, weightLevel, weightSizeGroup, intercept, verbose, loss)
+  .checkParameters(X, y, hc, lambda, weightLevel, weightSizeGroup, intercept, verbose, loss, sizeMaxGroup)
 
   # define some usefull variables
   n <- nrow(X)
   p <- ncol(X)
-  tcah <- rep(NA, 3)
+  tcah <- NA
   
   ######## hierarchical clustering
-  #if no hc output provided, we make one
+  # if hc output not provided, we perform one
   if(is.null(hc) | is.character(hc))
   {
     if(verbose)
@@ -67,16 +68,19 @@ MLGL <- function(X, y, hc = NULL, lambda = NULL, weightLevel = NULL, weightSizeG
     d <- dist(t(X))
     hc = fastcluster::hclust(d, method = ifelse(is.character(hc), hc, "ward.D2"))
     t2 <- proc.time()
-    tcah = t2-t1
+    
+    hc$time = as.numeric((t2-t1)[3])
+    tcah = hc$time
+    
     if(verbose)
-      cat("DONE in ",tcah[3],"s\n")
+      cat("DONE in ", tcah, "s\n")
   }
   
   ######## compute weight, active variables and groups
   if(verbose)
     cat("Preliminary step...")
   t1 = proc.time()
-  prelim <- preliminaryStep(hc, weightLevel, weightSizeGroup)  
+  prelim <- preliminaryStep(hc, weightLevel, weightSizeGroup, sizeMaxGroup)  
 
 
   #duplicate data
@@ -91,28 +95,28 @@ MLGL <- function(X, y, hc = NULL, lambda = NULL, weightLevel = NULL, weightSizeG
   t1 = proc.time()
   res <- gglasso(Xb, y, prelim$group, pf = prelim$weight, lambda = lambda, intercept = intercept, loss = loss, ...)
   t2 = proc.time()
-  tgglasso <- t2-t1
+  tgglasso <- as.numeric((t2-t1)[3])
   if(verbose)
-    cat("DONE in ",tgglasso[3],"s\n")
+    cat("DONE in ", tgglasso,"s\n")
   
   ########  create output object
   res2 <- list()
   res2$lambda = res$lambda
-  non0 = apply(res$beta,2,FUN=function(x){which(x!=0)})
-  res2$var = lapply(non0,FUN=function(x){prelim$var[x]})
-  res2$nVar = sapply(res2$var,FUN=function(x){length(unique(x))})
-  res2$group = lapply(non0,FUN=function(x){prelim$group[x]})
-  res2$nGroup = sapply(res2$group,FUN=function(x){length(unique(x))})
-  res2$beta = lapply(1:length(res$lambda),FUN=function(x){res$beta[non0[[x]],x]})
+  non0 = apply(res$beta, 2, FUN = function(x){which(x!=0)})
+  res2$var = lapply(non0, FUN = function(x){prelim$var[x]})
+  res2$nVar = sapply(res2$var, FUN = function(x){length(unique(x))})
+  res2$group = lapply(non0, FUN = function(x){prelim$group[x]})
+  res2$nGroup = sapply(res2$group, FUN = function(x){length(unique(x))})
+  res2$beta = lapply(1:length(res$lambda), FUN = function(x){res$beta[non0[[x]],x]})
   res2$b0 = res$b0
   res2$structure = prelim
   res2$dim = dim(X)
   res2$hc = hc
-  res2$time = c(tcah[3],tgglasso[3])
+  res2$time = c(tcah, tgglasso)
+  names(res2$time) = c("hclust","glasso")    
   res2$call = match.call()
   res2$intercept = intercept
   res2$loss = loss
-  names(res2$time) = c("hclust","glasso")    
   class(res2) = "MLGL"
   
   
@@ -149,8 +153,52 @@ MLGL.formula <- function(formula, data, hc = NULL, lambda = NULL, weightLevel = 
 }
 
 
+#' Hierarchical Clustering with distance matrix computed using bootstrap replicates
+#'
+#' @param X data
+#' @param frac fraction of sample used at each replicate
+#' @param B number of replicates
+#' @param method desired method: "single", "complete", "average", "mcquitty", "ward.D", "ward.D2", "centroid", "median".
+#' @param nCore number of cores
+#' 
+#' @return An object of class \code{hclust}
+#' 
+#' 
+#' @examples
+#' hc <- bootstrapHclust(USArrests, nCore = 1)
+#' 
+#' @export 
+bootstrapHclust <- function(X, frac = 1, B = 50, method = "ward.D2", nCore = NULL)
+{
+  t1 <- proc.time()
+  n <- nrow(X)
+  
+  if(frac <= 0 | frac > 1)
+    stop("frac must be between 0 and 1.")
+    
+    
+  nInd <- floor(n * frac)
+  d <- 0
+  for(i in 1:B)
+  {
+    ind <- sample(n, nInd, replace = TRUE)
+    d = d + parDist(t(X[ind,]), threads = nCore)
+  }
+  
+  d = d/B
+  
+  hc = fastcluster::hclust(d, method = ifelse(is.character(method), method, "ward.D2"))
+  t2 <- proc.time()
+  tcah <- t2-t1
+  
+  hc$tcah = as.numeric((t2-t1)[3])
+  
+  return(hc)
+}
+
+
 #
-# compute the mnimimum weight of each group
+# compute the mimimum weight of each group
 # 
 # @param hc outup of hclust function
 #
@@ -178,6 +226,42 @@ levelMinWeight <- function(hc, weightLevel = NULL)
   
   return(minLevelWeight)
 }
+
+
+
+#' Compute the group size weight vector with an authorized maximal size
+#' 
+#' @param hc outup of hclust 
+#' @param sizeMax maximum size of cluster to consider
+#'
+#' @return the weight vector 
+#'
+#' @examples
+#' set.seed(42)
+#' # Simulate gaussian data with block-diagonal variance matrix containing 12 blocks of size 5
+#' X <- simuBlockGaussian(50, 12, 5, 0.7)
+#' # Generate a response variable
+#' y <- X[,c(2, 7, 12)] %*% c(2, 2, -2) + rnorm(50, 0, 0.5)
+#' # use 20 as the maximal number of group
+#' hc <- hclust(dist(t(X)))
+#' w <- computeGroupSizeWeight(hc, sizeMax = 20)
+#' # Apply MLGL method
+#' res <- MLGL(X, y, hc = hc, weightSizeGroup = w)
+#'
+#' @export 
+computeGroupSizeWeight <- function(hc, sizeMax = NULL)
+{
+  uni <- uniqueGroupHclust(hc)
+  weight <- as.vector(table(uni$indexGroup))
+  
+  if(!is.null(sizeMax)) 
+    weight[weight > sizeMax] = 0
+  
+  weight = sqrt(weight)
+  
+  return(weight)
+}
+
 
 #
 # @param hc output of hierarchical clustering
@@ -226,7 +310,7 @@ levelGroupHC <- function(hc)
 #
 # preliminary step for MLGL. Compute weight, active variables and groups
 #
-preliminaryStep <- function(hc, weightLevel = NULL, weightSizeGroup = NULL)
+preliminaryStep <- function(hc, weightLevel = NULL, weightSizeGroup = NULL, sizeGroupMax = NULL)
 {
   #find unique groups of the hclust output
   uni <- uniqueGroupHclust(hc)
@@ -241,6 +325,9 @@ preliminaryStep <- function(hc, weightLevel = NULL, weightSizeGroup = NULL)
   #weight for group size
   if(is.null(weightSizeGroup))
     weightSizeGroup = as.vector(sqrt(table(uni$indexGroup)))
+  
+  if(!is.null(sizeGroupMax))
+    weightSizeGroup[weightSizeGroup > sqrt(sizeGroupMax)] = 0
   
   #weight for each group
   weight <- weightSizeGroup * weightLevelGroup
@@ -277,7 +364,7 @@ preliminaryStep <- function(hc, weightLevel = NULL, weightSizeGroup = NULL)
 }
 
 # check parameters of MLGL function
-.checkParameters <- function(X, y, hc, lambda, weightLevel, weightSizeGroup, intercept, verbose, loss)
+.checkParameters <- function(X, y, hc, lambda, weightLevel, weightSizeGroup, intercept, verbose, loss, sizeMaxGroup)
 {
   #check X
   if(!is.matrix(X)) 
@@ -306,6 +393,11 @@ preliminaryStep <- function(hc, weightLevel = NULL, weightSizeGroup = NULL)
     {
       if(!(hc %in% c("single", "complete", "average", "mcquitty", "ward.D", "ward.D2", "centroid", "median")))
         stop("In character mode, hc must be \"single\", \"complete\", \"average\", \"mcquitty\", \"ward.D\", \"ward.D2\", \"centroid\" or \"median\".")
+      
+      if(!is.null(weightLevel))
+        stop("weightLevel requires a computed hc")
+      if(!is.null(weightSizeGroup))
+        stop("weightSizeGroup requires a computed hc")
     }else{
       #check if hc is a hclust object
       if(class(hc)!="hclust")
@@ -313,9 +405,19 @@ preliminaryStep <- function(hc, weightLevel = NULL, weightSizeGroup = NULL)
       #check if hc and X are compatible
       if(length(hc$order)!=ncol(X))
         stop("hc is not a clustering of the p covariates of X.")
+      
+      if(!is.null(weightLevel) && length(weightLevel) != 2*ncol(X)-1)
+        stop("weightLevel must be of size 2*p-1")
+      if(!is.null(weightSizeGroup) && length(weightSizeGroup) != 2*ncol(X)-1)
+        stop("weightSizeGroup must be of size 2*p-1")
     }
 
     
+  }else{
+    if(!is.null(weightLevel))
+      stop("weightLevel requires the hc argument")
+    if(!is.null(weightSizeGroup))
+      stop("weightSizeGroup requires the hc argument")
   }
   
   #check if lambda is a vector of positive real
@@ -358,6 +460,16 @@ preliminaryStep <- function(hc, weightLevel = NULL, weightSizeGroup = NULL)
     stop("verbose must be a boolean.")
   if(!is.logical(verbose))
     stop("verbose must be a boolean.")
+  
+  #check if sizeMaxGroup is a positive integer
+  if(!is.null(sizeMaxGroup))
+  {
+    if(length(sizeMaxGroup)!=1)
+      stop("sizeMaxGroup must be a positive integer.")
+    if(!.is.wholenumber(sizeMaxGroup))
+      stop("sizeMaxGroup must be a positive integer.")
+  }
+
   
   invisible(return(NULL))
 }

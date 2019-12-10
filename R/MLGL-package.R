@@ -1,6 +1,6 @@
 #' @importFrom graphics abline legend matplot plot par text
 #' @importFrom stats anova approx dist lm p.adjust predict binomial glm model.matrix model.response
-#' @import gglasso MASS Matrix fastcluster FactoMineR
+#' @import gglasso MASS Matrix fastcluster FactoMineR parallelDist
 #' 
 #' @title MLGL
 #' @docType package
@@ -29,7 +29,7 @@
 #' # Simulate gaussian data with block-diagonal variance matrix containing 12 blocks of size 5
 #' X <- simuBlockGaussian(50, 12, 5, 0.7)
 #' # Generate a response variable
-#' y <- drop(X[,c(2,7,12)] %*% c(2, 2, -2) + rnorm(50, 0, 0.5))
+#' y <- X[,c(2,7,12)] %*% c(2, 2, -2) + rnorm(50, 0, 0.5)
 #' # Apply MLGL method
 #' res <- MLGL(X, y)
 #' 

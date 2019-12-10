@@ -10,6 +10,8 @@
 #' @param alpha control level for testing procedure
 #' @param test test used in the testing procedure. Default is \link{partialFtest}
 #' @param fractionSampleMLGL a real between 0 and 1 : the fraction of individuals to use in the sample for MLGL (see Details).
+#' @param BHclust number of replicates for computing the distance matrix for the hierarchical clustering tree
+#' @param nCore number of cores used for distance computation. Use all cores by default.
 #' @param ... Others parameters for MLGL
 #'
 #' @return a list containing :
@@ -36,14 +38,14 @@
 #' # least square loss
 #' set.seed(42)
 #' X <- simuBlockGaussian(50, 12, 5, 0.7)
-#' y <- drop(X[,c(2,7,12)] %*% c(2,2,-2) + rnorm(50, 0, 0.5))
+#' y <- X[,c(2,7,12)] %*% c(2,2,-2) + rnorm(50, 0, 0.5)
 #' res <- fullProcess(X, y)
 #'
 #'
 #' @seealso \link{MLGL}, \link{hierarchicalFDR}, \link{hierarchicalFWER}, \link{selFDR}, \link{selFWER}
 #'
 #' @export
-fullProcess <- function(X, y, control = c("FWER", "FDR"), alpha = 0.05, test = partialFtest, hc = NULL, fractionSampleMLGL = 1/2, ...)
+fullProcess <- function(X, y, control = c("FWER", "FDR"), alpha = 0.05, test = partialFtest, hc = NULL, fractionSampleMLGL = 1/2, BHclust = 50, nCore = NULL, ...)
 {
   loss = "ls"
   # if(loss == "logit" & identical(test, partialFtest))
@@ -59,17 +61,13 @@ fullProcess <- function(X, y, control = c("FWER", "FDR"), alpha = 0.05, test = p
   ##### part 1 : hierarchical clustering with half of the data
   if(is.null(hc) | is.character(hc))
   {
-    
     # center variables and sd = 1
     Xb <- scale(X, center = TRUE, scale = FALSE)
     Xb = scale(Xb, center = FALSE, scale = sqrt(colSums(Xb^2)/n))
     
-    # enclidian distance
-    d <- dist(t(Xb[ind1,]))
     
     # hierarchical clustering
-    hc = fastcluster::hclust(d, method = ifelse(is.character(hc), hc, "ward.D2"))
-    
+    hc = bootstrapHclust(Xb, frac = 1, B = BHclust, method = ifelse(is.character(hc), hc, "ward.D2"), nCore = nCore)
   }
   
   

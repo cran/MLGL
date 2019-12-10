@@ -10,6 +10,7 @@
 #' @param weightLevel a vector of size p for each level of the hierarchy. A zero indicates that the level will be ignored. If not provided, use 1/(height between 2 successive levels)
 #' @param weightSizeGroup a vector
 #' @param loss a character string specifying the loss function to use, valid options are: "ls" least squares loss (regression) and "logit" logistic loss (classification)
+#' @param sizeMaxGroup maximum size of selected groups. If NULL, no restriction
 #' @param intercept should an intercept be included in the model ?
 #' @param verbose print some informations
 #' @param ... Others parameters for \code{\link{cv.gglasso}} function
@@ -37,19 +38,19 @@
 #' # Simulate gaussian data with block-diagonal variance matrix containing 12 blocks of size 5
 #' X <- simuBlockGaussian(50, 12, 5, 0.7)
 #' # Generate a response variable
-#' y <- drop(X[, c(2,7,12)] %*% c(2, 2, -2) + rnorm(50,0,0.5))
+#' y <- X[, c(2,7,12)] %*% c(2, 2, -2) + rnorm(50,0,0.5)
 #' # Apply cv.MLGL method
 #' res <- cv.MLGL(X, y)
 #' 
 #' @seealso \link{MLGL}, \link{stability.MLGL}, \link{predict.cv.gglasso}, \link{coef.cv.MLGL}, \link{plot.cv.MLGL}
 #' 
 #' @export
-cv.MLGL <- function(X, y, nfolds = 5, lambda = NULL, hc = NULL, weightLevel = NULL, weightSizeGroup = NULL, loss = c("ls", "logit"), intercept = TRUE, verbose = FALSE,...)
+cv.MLGL <- function(X, y, nfolds = 5, lambda = NULL, hc = NULL, weightLevel = NULL, weightSizeGroup = NULL, loss = c("ls", "logit"), intercept = TRUE, sizeMaxGroup = NULL, verbose = FALSE,...)
 {
   
   #check parameters 
   loss = match.arg(loss)
-  .checkParameters(X, y, hc, lambda, weightLevel, weightSizeGroup, intercept, verbose, loss)
+  .checkParameters(X, y, hc, lambda, weightLevel, weightSizeGroup, intercept, verbose, loss, sizeMaxGroup)
   
   #nfolds
   if( !is.numeric(nfolds) | (length(nfolds)!=1) )
@@ -82,7 +83,7 @@ cv.MLGL <- function(X, y, nfolds = 5, lambda = NULL, hc = NULL, weightLevel = NU
   if(verbose)
     cat("Preliminary step...")
   t1 = proc.time()
-  prelim <- preliminaryStep(hc, weightLevel, weightSizeGroup)  
+  prelim <- preliminaryStep(hc, weightLevel, weightSizeGroup, sizeMaxGroup)  
   
   #duplicate data
   Xb <- X[,prelim$var]

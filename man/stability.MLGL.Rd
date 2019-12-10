@@ -4,9 +4,20 @@
 \alias{stability.MLGL}
 \title{Stability Selection for Multi-Layer Group-lasso}
 \usage{
-stability.MLGL(X, y, B = 50, fraction = 0.5, hc = NULL,
-  lambda = NULL, weightLevel = NULL, weightSizeGroup = NULL,
-  loss = c("ls", "logit"), intercept = TRUE, verbose = FALSE, ...)
+stability.MLGL(
+  X,
+  y,
+  B = 50,
+  fraction = 0.5,
+  hc = NULL,
+  lambda = NULL,
+  weightLevel = NULL,
+  weightSizeGroup = NULL,
+  loss = c("ls", "logit"),
+  intercept = TRUE,
+  verbose = FALSE,
+  ...
+)
 }
 \arguments{
 \item{X}{matrix of size n*p}
@@ -56,10 +67,12 @@ levels of the hierarchy are used in the differents run of MLGL for estimating th
 set.seed(42)
 # Simulate gaussian data with block-diagonal variance matrix containing 12 blocks of size 5
 X <- simuBlockGaussian(50, 12, 5, 0.7)
+
 # Generate a response variable
-y <- drop(X[,c(2,7,12)]\%*\%c(2,2,-2)+rnorm(50,0,0.5))
+y <- X[,c(2,7,12)]\%*\%c(2,2,-2) + rnorm(50, 0, 0.5)
+
 # Apply stability.MLGL method
-res <- stability.MLGL(X,y)
+res <- stability.MLGL(X, y)
 }
 
 }

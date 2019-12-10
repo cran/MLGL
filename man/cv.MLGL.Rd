@@ -4,9 +4,20 @@
 \alias{cv.MLGL}
 \title{Multi-Layer Group-Lasso with cross V-fold validation}
 \usage{
-cv.MLGL(X, y, nfolds = 5, lambda = NULL, hc = NULL,
-  weightLevel = NULL, weightSizeGroup = NULL, loss = c("ls",
-  "logit"), intercept = TRUE, verbose = FALSE, ...)
+cv.MLGL(
+  X,
+  y,
+  nfolds = 5,
+  lambda = NULL,
+  hc = NULL,
+  weightLevel = NULL,
+  weightSizeGroup = NULL,
+  loss = c("ls", "logit"),
+  intercept = TRUE,
+  sizeMaxGroup = NULL,
+  verbose = FALSE,
+  ...
+)
 }
 \arguments{
 \item{X}{matrix of size n*p}
@@ -26,6 +37,8 @@ cv.MLGL(X, y, nfolds = 5, lambda = NULL, hc = NULL,
 \item{loss}{a character string specifying the loss function to use, valid options are: "ls" least squares loss (regression) and "logit" logistic loss (classification)}
 
 \item{intercept}{should an intercept be included in the model ?}
+
+\item{sizeMaxGroup}{maximum size of selected groups. If NULL, no restriction}
 
 \item{verbose}{print some informations}
 
@@ -56,7 +69,7 @@ set.seed(42)
 # Simulate gaussian data with block-diagonal variance matrix containing 12 blocks of size 5
 X <- simuBlockGaussian(50, 12, 5, 0.7)
 # Generate a response variable
-y <- drop(X[, c(2,7,12)] \%*\% c(2, 2, -2) + rnorm(50,0,0.5))
+y <- X[, c(2,7,12)] \%*\% c(2, 2, -2) + rnorm(50,0,0.5)
 # Apply cv.MLGL method
 res <- cv.MLGL(X, y)
 

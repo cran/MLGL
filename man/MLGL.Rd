@@ -5,13 +5,32 @@
 \alias{MLGL.formula}
 \title{Multi-Layer Group-Lasso}
 \usage{
-MLGL(X, y, hc = NULL, lambda = NULL, weightLevel = NULL,
-  weightSizeGroup = NULL, intercept = TRUE, loss = c("ls", "logit"),
-  verbose = FALSE, ...)
+MLGL(
+  X,
+  y,
+  hc = NULL,
+  lambda = NULL,
+  weightLevel = NULL,
+  weightSizeGroup = NULL,
+  intercept = TRUE,
+  loss = c("ls", "logit"),
+  sizeMaxGroup = NULL,
+  verbose = FALSE,
+  ...
+)
 
-MLGL.formula(formula, data, hc = NULL, lambda = NULL,
-  weightLevel = NULL, weightSizeGroup = NULL, intercept = TRUE,
-  loss = c("ls", "logit"), verbose = FALSE, ...)
+MLGL.formula(
+  formula,
+  data,
+  hc = NULL,
+  lambda = NULL,
+  weightLevel = NULL,
+  weightSizeGroup = NULL,
+  intercept = TRUE,
+  loss = c("ls", "logit"),
+  verbose = FALSE,
+  ...
+)
 }
 \arguments{
 \item{X}{matrix of size n*p}
@@ -22,13 +41,15 @@ MLGL.formula(formula, data, hc = NULL, lambda = NULL,
 
 \item{lambda}{lambda values for group lasso. If not provided, the function generates its own values of lambda}
 
-\item{weightLevel}{a vector of size p for each level of the hierarchy. A zero indicates that the level will be ignored. If not provided, use 1/(height between 2 successive levels)}
+\item{weightLevel}{a vector of size p for each level of the hierarchy. A zero indicates that the level will be ignored. If not provided, use 1/(height between 2 successive levels). Only if \code{hc} is provided}
 
-\item{weightSizeGroup}{a vector of size 2*p-1 containing the weight for each group. Default is the square root of the size of each group}
+\item{weightSizeGroup}{a vector of size 2*p-1 containing the weight for each group. Default is the square root of the size of each group. Only if \code{hc} is provided}
 
 \item{intercept}{should an intercept be included in the model ?}
 
 \item{loss}{a character string specifying the loss function to use, valid options are: "ls" least squares loss (regression) and "logit" logistic loss (classification)}
+
+\item{sizeMaxGroup}{maximum size of selected groups. If NULL, no restriction}
 
 \item{verbose}{print some information}
 
@@ -65,9 +86,9 @@ set.seed(42)
 # Simulate gaussian data with block-diagonal variance matrix containing 12 blocks of size 5
 X <- simuBlockGaussian(50, 12, 5, 0.7)
 # Generate a response variable
-y <- drop(X[,c(2,7,12)]\%*\%c(2,2,-2)+rnorm(50,0,0.5))
+y <- X[,c(2, 7, 12)] \%*\% c(2, 2, -2) + rnorm(50, 0, 0.5)
 # Apply MLGL method
-res <- MLGL(X,y)
+res <- MLGL(X, y)
 
 }
 \seealso{
