@@ -45,7 +45,7 @@ cv.MLGL(
 \item{...}{Others parameters for \code{\link{cv.gglasso}} function}
 }
 \value{
-a cv.MLGL object containing :
+a cv.MLGL object containing:
 \describe{
 \item{lambda}{values of \code{lambda}.}
 \item{cvm}{the mean cross-validated error.}
@@ -61,18 +61,17 @@ a cv.MLGL object containing :
 V-fold cross validation for \code{\link{MLGL}} function
 }
 \details{
-Hierarhical clustering is performed with all the variables. Then, the partitions from the different
- levels of the hierarchy are used in the differents run of MLGL for cross validation.
+Hierarchical clustering is performed with all the variables. Then, the partitions from the different
+ levels of the hierarchy are used in the different run of MLGL for cross validation.
 }
 \examples{
 set.seed(42)
 # Simulate gaussian data with block-diagonal variance matrix containing 12 blocks of size 5
 X <- simuBlockGaussian(50, 12, 5, 0.7)
 # Generate a response variable
-y <- X[, c(2,7,12)] \%*\% c(2, 2, -2) + rnorm(50,0,0.5)
+y <- X[, c(2, 7, 12)] \%*\% c(2, 2, -2) + rnorm(50, 0, 0.5)
 # Apply cv.MLGL method
 res <- cv.MLGL(X, y)
-
 }
 \seealso{
 \link{MLGL}, \link{stability.MLGL}, \link{predict.cv.gglasso}, \link{coef.cv.MLGL}, \link{plot.cv.MLGL}

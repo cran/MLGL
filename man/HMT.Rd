@@ -13,6 +13,8 @@ HMT(
   control = c("FWER", "FDR"),
   alpha = 0.05,
   test = partialFtest,
+  addRoot = FALSE,
+  Shaffer = FALSE,
   ...
 )
 }
@@ -29,15 +31,20 @@ HMT(
 
 \item{test}{test used in the testing procedure. Default is \link{partialFtest}}
 
-\item{...}{extra parameters fpr \link{selFDR}}
+\item{addRoot}{If TRUE, add a common root containing all the groups}
+
+\item{Shaffer}{If TRUE, a Shaffer correction is performed (only if control = "FWER")}
+
+\item{...}{extra parameters for \link{selFDR}}
 }
 \value{
-a list containing :
+a list containing:
 \describe{
   \item{lambdaOpt}{lambda values maximizing the number of rejects}
   \item{var}{A vector containing the index of selected variables for the first \code{lambdaOpt} value}
   \item{group}{A vector containing the values index of selected groups for the first \code{lambdaOpt} value}
   \item{selectedGroups}{Selected groups for the first \code{lambdaOpt} value}
+  \item{indLambdaOpt}{indices associated with optimal lambdas}
   \item{reject}{Selected groups for all lambda values}
   \item{alpha}{Control level}
   \item{test}{Test used in the testing procedure}
@@ -57,7 +64,7 @@ Apply Hierarchical Multiple Testing procedure on a \code{\link{MLGL}} object
 \examples{
 set.seed(42)
 X <- simuBlockGaussian(50, 12, 5, 0.7)
-y <- X[,c(2,7,12)] \%*\% c(2,2,-2) + rnorm(50, 0, 0.5)
+y <- X[, c(2, 7, 12)] \%*\% c(2, 2, -2) + rnorm(50, 0, 0.5)
 res <- MLGL(X, y)
 
 # perform hierarchical testing with FWER control
@@ -65,8 +72,6 @@ out <- HMT(res, X, y, alpha = 0.05)
 
 # test a new value of alpha for a specific lambda
 selFWER(out$hierTest[[60]], alpha = 0.1)
-
-
 }
 \seealso{
 \link{hierarchicalFWER} \link{hierarchicalFDR} \link{selFWER} \link{selFDR}

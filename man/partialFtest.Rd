@@ -22,12 +22,12 @@ Perform a partial F-test
 \details{
 y = X * beta + epsilon
 
-null hypothesis : beta[varToTest] = 0
-alternative hypothesis : it exists an index k in varToTest such that beta[k] != 0
+null hypothesis: beta[varToTest] = 0
+alternative hypothesis: it exists an index k in varToTest such that beta[k] != 0
 
 The test statistic is based on a full and a reduced model.
-full : y = X * beta + epsilon
-reduced : y = X * beta[-varToTest] + epsilon
+full: y = X * beta + epsilon
+reduced: y = X * beta[-varToTest] + epsilon
 }
 \seealso{
 \link{Ftest}

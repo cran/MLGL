@@ -45,7 +45,7 @@ stability.MLGL(
 \item{...}{Others parameters for \code{\link{gglasso}} function}
 }
 \value{
-a stability.MLGL object containing :
+a stability.MLGL object containing:
 \describe{
 \item{lambda}{sequence of \code{lambda}.}
 \item{B}{Number of bootstrap samples.}
@@ -59,8 +59,8 @@ a stability.MLGL object containing :
 Stability selection for \code{\link{MLGL}}
 }
 \details{
-Hierarhical clustering is performed with all the variables. Then, the partitions from the different
-levels of the hierarchy are used in the differents run of MLGL for estimating the probability of selection of each group.
+Hierarchical clustering is performed with all the variables. Then, the partitions from the different
+levels of the hierarchy are used in the different runs of MLGL for estimating the probability of selection of each group.
 }
 \examples{
 \donttest{
@@ -69,7 +69,7 @@ set.seed(42)
 X <- simuBlockGaussian(50, 12, 5, 0.7)
 
 # Generate a response variable
-y <- X[,c(2,7,12)]\%*\%c(2,2,-2) + rnorm(50, 0, 0.5)
+y <- X[, c(2, 7, 12)] \%*\% c(2, 2, -2) + rnorm(50, 0, 0.5)
 
 # Apply stability.MLGL method
 res <- stability.MLGL(X, y)
@@ -77,7 +77,7 @@ res <- stability.MLGL(X, y)
 
 }
 \references{
-Meinshausen and Buhlmann (2010). Stability selection. In : Journal of the Royal Statistical Society : Series B (Statistical Methodology) 72.4, p. 417-473.
+Meinshausen and Buhlmann (2010). Stability selection. Journal of the Royal Statistical Society: Series B (Statistical Methodology) 72.4, p. 417-473.
 }
 \seealso{
 \link{cv.MLGL}, \link{MLGL}
