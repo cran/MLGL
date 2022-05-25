@@ -1,11 +1,13 @@
-#' Run hierarchical clustering following by a group-lasso on all the different partition and a hierarchical testing procedure. Only for linear regression problem.
+#' Run hierarchical clustering following by a group-lasso on all the different partition and a hierarchical testing procedure. 
+#' Only for linear regression problem.
 #'
 #' @title Full process of MLGL
 #'
 #' @author Quentin Grimonprez
 #' @param X matrix of size n*p
 #' @param y vector of size n.
-#' @param hc output of \code{\link{hclust}} function. If not provided, \code{\link{hclust}} is run with ward.D2 method. User can also provide the desired method: "single", "complete", "average", "mcquitty", "ward.D", "ward.D2", "centroid", "median".
+#' @param hc output of \code{\link{hclust}} function. If not provided, \code{\link{hclust}} is run with ward.D2 method. User 
+#' can also provide the desired method: "single", "complete", "average", "mcquitty", "ward.D", "ward.D2", "centroid", "median".
 #' @param control either "FDR" or "FWER"
 #' @param alpha control level for testing procedure
 #' @param test test used in the testing procedure. Default is \link{partialFtest}
@@ -45,7 +47,13 @@
 #' @seealso \link{MLGL}, \link{hierarchicalFDR}, \link{hierarchicalFWER}, \link{selFDR}, \link{selFWER}
 #'
 #' @export
-fullProcess <- function(X, y, control = c("FWER", "FDR"), alpha = 0.05, test = partialFtest, 
+fullProcess <- function(X, ...) {
+  UseMethod("fullProcess")
+}
+
+#' @rdname fullProcess
+#' @export
+fullProcess.default <- function(X, y, control = c("FWER", "FDR"), alpha = 0.05, test = partialFtest, 
                         hc = NULL, fractionSampleMLGL = 1 / 2, BHclust = 50, nCore = NULL, 
                         addRoot = FALSE, Shaffer = FALSE, ...) {
   loss <- "ls"
@@ -85,8 +93,10 @@ fullProcess <- function(X, y, control = c("FWER", "FDR"), alpha = 0.05, test = p
 }
 
 
-#' @param formula an object of class "formula" (or one that can be coerced to that class): a symbolic description of the model to be fitted.
-#' @param data an optional data frame, list or environment (or object coercible by as.data.frame to a data frame) containing the variables in the model. If not found in data, the variables are taken from environment(formula)
+#' @param formula an object of class "formula" (or one that can be coerced to that class): a symbolic description of the 
+#' model to be fitted.
+#' @param data an optional data frame, list or environment (or object coercible by as.data.frame to a data frame) containing 
+#' the variables in the model. If not found in data, the variables are taken from environment (formula)
 #'
 #'
 #' @rdname fullProcess
@@ -103,12 +113,11 @@ fullProcess.formula <- function(formula, data, control = c("FWER", "FDR"), alpha
   mf[[1L]] <- quote(stats::model.frame)
   mf <- eval(mf, parent.frame())
   mt <- attr(mf, "terms")
-
   y <- model.response(mf, "numeric")
   X <- model.matrix(mt, mf)
-  X <- as.matrix(X)
+  X <- as.matrix(X[, -1])
 
-  res <- fullProcess(X, y, control, alpha, test, hc, fractionSampleMLGL, BHclust, nCore, addRoot, Shaffer, ...)
+  res <- fullProcess.default(X, y, control, alpha, test, hc, fractionSampleMLGL, BHclust, nCore, addRoot, Shaffer, ...)
 
   return(res)
 }
@@ -146,11 +155,12 @@ fullProcess.formula <- function(formula, data, control = c("FWER", "FDR"), alpha
   if (!is.null(hc)) {
     if (is.character(hc)) {
       if (!(hc %in% c("single", "complete", "average", "mcquitty", "ward.D", "ward.D2", "centroid", "median"))) {
-        stop("In character mode, hc must be \"single\", \"complete\", \"average\", \"mcquitty\", \"ward.D\", \"ward.D2\", \"centroid\" or \"median\".")
+        stop("In character mode, hc must be \"single\", \"complete\", \"average\", \"mcquitty\", \"ward.D\", 
+             \"ward.D2\", \"centroid\" or \"median\".")
       }
     } else {
       # check if hc is a hclust object
-      if (class(hc) != "hclust") {
+      if (!inherits(hc, "hclust")) {
         stop("hc must be an hclust object.")
       }
       # check if hc and X are compatible

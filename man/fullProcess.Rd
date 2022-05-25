@@ -2,10 +2,13 @@
 % Please edit documentation in R/fullProcess.R
 \name{fullProcess}
 \alias{fullProcess}
+\alias{fullProcess.default}
 \alias{fullProcess.formula}
 \title{Full process of MLGL}
 \usage{
-fullProcess(
+fullProcess(X, ...)
+
+\method{fullProcess}{default}(
   X,
   y,
   control = c("FWER", "FDR"),
@@ -20,7 +23,7 @@ fullProcess(
   ...
 )
 
-fullProcess.formula(
+\method{fullProcess}{formula}(
   formula,
   data,
   control = c("FWER", "FDR"),
@@ -38,6 +41,8 @@ fullProcess.formula(
 \arguments{
 \item{X}{matrix of size n*p}
 
+\item{...}{Others parameters for MLGL}
+
 \item{y}{vector of size n.}
 
 \item{control}{either "FDR" or "FWER"}
@@ -46,7 +51,8 @@ fullProcess.formula(
 
 \item{test}{test used in the testing procedure. Default is \link{partialFtest}}
 
-\item{hc}{output of \code{\link{hclust}} function. If not provided, \code{\link{hclust}} is run with ward.D2 method. User can also provide the desired method: "single", "complete", "average", "mcquitty", "ward.D", "ward.D2", "centroid", "median".}
+\item{hc}{output of \code{\link{hclust}} function. If not provided, \code{\link{hclust}} is run with ward.D2 method. User 
+can also provide the desired method: "single", "complete", "average", "mcquitty", "ward.D", "ward.D2", "centroid", "median".}
 
 \item{fractionSampleMLGL}{a real between 0 and 1: the fraction of individuals to use in the sample for MLGL (see Details).}
 
@@ -58,11 +64,11 @@ fullProcess.formula(
 
 \item{Shaffer}{If TRUE, a Shaffer correction is performed (only if control = "FWER")}
 
-\item{...}{Others parameters for MLGL}
+\item{formula}{an object of class "formula" (or one that can be coerced to that class): a symbolic description of the 
+model to be fitted.}
 
-\item{formula}{an object of class "formula" (or one that can be coerced to that class): a symbolic description of the model to be fitted.}
-
-\item{data}{an optional data frame, list or environment (or object coercible by as.data.frame to a data frame) containing the variables in the model. If not found in data, the variables are taken from environment(formula)}
+\item{data}{an optional data frame, list or environment (or object coercible by as.data.frame to a data frame) containing 
+the variables in the model. If not found in data, the variables are taken from environment (formula)}
 }
 \value{
 a list containing:
@@ -80,7 +86,8 @@ a list containing:
 }
 }
 \description{
-Run hierarchical clustering following by a group-lasso on all the different partition and a hierarchical testing procedure. Only for linear regression problem.
+Run hierarchical clustering following by a group-lasso on all the different partition and a hierarchical testing procedure. 
+Only for linear regression problem.
 }
 \details{
 Divide the n individuals in two samples. Then the three following steps are done:

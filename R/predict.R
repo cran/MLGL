@@ -6,7 +6,8 @@
 #' @param object \code{\link{MLGL}} object
 #' @param newx matrix with new individuals for prediction. If type="coefficients", the parameter has to be NULL
 #' @param s values of lambda. If NULL, use values from object
-#' @param type if "fit", return the fitted values for each values of s, if "coefficients", return the estimated coefficients for each s
+#' @param type if "fit", return the fitted values for each values of s, if "coefficients", return the estimated 
+#' coefficients for each s
 #' @param ... Not used. Other arguments to predict.
 #'
 #' @return A matrix with fitted values or estimated coefficients for given values of s.
@@ -14,6 +15,15 @@
 #' @method predict MLGL
 #'
 #' @author function inspired from predict function from gglasso package by Yi Yang and Hui Zou.
+#'
+#' @examples 
+#' X <- simuBlockGaussian(n = 50, nBlock = 12, sizeBlock = 5, rho = 0.7)
+#' y <- drop(X[, c(2, 7, 12)] %*% c(2, 2, -1)) + rnorm(50, 0, 0.5)
+#' 
+#' m1 <- MLGL(X, y, loss = "ls")
+#' predict(m1, newx = X)
+#' predict(m1, s=3, newx = X)
+#' predict(m1, s=1:3, newx = X)
 #'
 #' @seealso \link{MLGL}
 #'
@@ -25,7 +35,15 @@ predict.MLGL <- function(object, newx = NULL, s = NULL, type = c("fit", "coeffic
   if ((type == "fit") & is.null(newx)) {
     stop("newx is missing with type='fit'.")
   }
-
+  
+  if (!is.null(s)) {
+    if (!is.numeric(s)) {
+      stop("s must be a vector of positive real.")
+    }
+    if (any(s < 0)) {
+      stop("s must be a vector of positive real.")
+    }
+  }
 
   b0 <- t(as.matrix(object$b0))
   rownames(b0) <- "(Intercept)"
@@ -59,7 +77,8 @@ predict.MLGL <- function(object, newx = NULL, s = NULL, type = c("fit", "coeffic
 #' @param object \code{\link{cv.MLGL}} object
 #' @param newx matrix with new individuals for prediction. If type="coefficients", the parameter has to be NULL
 #' @param s Either "lambda.1se" or "lambda.min"
-#' @param type if "fit", return the fitted values for each values of s, if "coefficients", return the estimated coefficients for each s
+#' @param type if "fit", return the fitted values for each values of s, if "coefficients", return the estimated 
+#' coefficients for each s
 #' @param ... Not used. Other arguments to predict.
 #'
 #' @return A matrix with fitted values or estimated coefficients for given values of s.
